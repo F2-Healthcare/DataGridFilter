@@ -1,16 +1,4 @@
-﻿#region (c) 2022 Gilles Macabies All right reserved
-
-// Author     : Gilles Macabies
-// Solution   : FilterDataGrid
-// Projet     : SharedModelView
-// File       : ModelView.cs
-// Created    : 13/11/2022
-// 
-
-#endregion
-
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -80,12 +68,12 @@ namespace SharedModelView.ModelView
                 collView.Filter = e =>
                 {
                     var item = (Employe)e;
-                    return item != null &&
-                           (item.LastName != null && item.LastName.StartsWith(search, StringComparison.OrdinalIgnoreCase)
-                            || item.FirstName != null && item.FirstName.StartsWith(search, StringComparison.OrdinalIgnoreCase));
+                    return item is not null &&
+                           (item.LastName is not null && item.LastName.StartsWith(search, StringComparison.OrdinalIgnoreCase)
+                            || item.FirstName is not null && item.FirstName.StartsWith(search, StringComparison.OrdinalIgnoreCase));
                 };
 
-                if (collView != null)
+                if (collView is not null)
                 {
                     collView.Refresh();
                     FilteredList = new ObservableCollection<Employe>(collView.OfType<Employe>());

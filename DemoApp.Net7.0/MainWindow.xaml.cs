@@ -1,15 +1,4 @@
-﻿#region (c) 2022 Gilles Macabies All right reserved
-
-// Author     : Gilles Macabies
-// Solution   : FilterDataGrid
-// Projet     : DemoApp.Net7.0
-// File       : MainWindow.xaml.cs
-// Created    : 04/12/2022
-//
-
-#endregion
-
-using SharedModelView.ModelView;
+﻿using SharedModelView.ModelView;
 using System;
 using System.Diagnostics;
 using System.Windows;

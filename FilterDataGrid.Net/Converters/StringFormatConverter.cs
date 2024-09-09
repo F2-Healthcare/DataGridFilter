@@ -1,69 +1,49 @@
-﻿#region (c) 2019 Gilles Macabies All right reserved
-
-// Author     : Gilles Macabies
-// Solution   : WpfCodeProject
-// Projet     : WpfCodeProject
-// File       : StringFormatConverter.cs
-// Created    : 26/01/2021
-//
-
-#endregion (c) 2019 Gilles Macabies All right reserved
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 
-namespace FilterDataGrid.Converters
+namespace FilterDataGrid.Converters;
+
+public class StringFormatConverter : IValueConverter, IMultiValueConverter
 {
-    public class StringFormatConverter : IValueConverter, IMultiValueConverter
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        #region ValueConverter
+        return $"{value}";
+    }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
+    }
+
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        try
         {
-            return $"{value}";
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotSupportedException();
-        }
-
-        #endregion ValueConverter
-
-        #region MultiValueConverter
-
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // values [0] contains the format
-                if (values[0] == DependencyProperty.UnsetValue || string.IsNullOrEmpty(values[0]?.ToString()))
-                    return string.Empty;
-
-                var stringFormat = values[0].ToString() ?? string.Empty;
-
-                // the last item of values array is culture
-                if (parameter != null && parameter.Equals("Culture"))
-                    culture = values.LastOrDefault() != null ? (CultureInfo)values.Last() : culture;
-
-                return string.Format(culture, stringFormat, values.Skip(1).ToArray());
-            }
-            catch (FormatException ex)
-            {
-                Debug.WriteLine($"StringFormatConverter.Convert error: {ex.Message}");
+            // values [0] contains the format
+            if (values[0] == DependencyProperty.UnsetValue || string.IsNullOrEmpty(values[0]?.ToString()))
                 return string.Empty;
-            }
-        }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            var stringFormat = values[0].ToString() ?? string.Empty;
+
+            // the last item of values array is culture
+            if (parameter is not null && parameter.Equals("Culture"))
+                culture = values.LastOrDefault() is not null ? (CultureInfo)values.Last() : culture;
+
+            return string.Format(culture, stringFormat, values.Skip(1).ToArray());
+        }
+        catch (FormatException ex)
         {
-            throw new NotSupportedException();
+            Debug.WriteLine($"StringFormatConverter.Convert error: {ex.Message}");
+            return string.Empty;
         }
+    }
 
-        #endregion MultiValueConverter
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
     }
 }

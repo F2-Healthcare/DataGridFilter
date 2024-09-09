@@ -1,15 +1,4 @@
-﻿#region (c) 2022 Gilles Macabies All right reserved
-
-// Author     : Gilles Macabies
-// Solution   : FilterDataGrid
-// Projet     : DemoApp.Net6.0
-// File       : DelegateCommand.cs
-// Created    : 13/11/2022
-// 
-
-#endregion
-
-using System;
+﻿using System;
 using System.Windows.Input;
 
 // ReSharper disable UnusedMember.Global
@@ -42,7 +31,7 @@ namespace SharedModelView.ModelView
 
         public bool CanExecute(object parameter)
         {
-            return canExecute == null || canExecute(parameter);
+            return canExecute is null || canExecute(parameter);
         }
 
         public void Execute(object parameter)

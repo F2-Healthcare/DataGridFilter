@@ -10,7 +10,7 @@
             <Setter Property="Margin" Value="10,0,0,0" />
             <Setter Property="AlternatingRowBackground" Value="WhiteSmoke" />
             <Setter Property="AlternationCount" Value="2" />
-            <Setter Property="ColumnWidth" Value="*" />
+            <Setter Property="ColumnWidth" Value="Auto" />
             <Setter Property="HorizontalGridLinesBrush" Value="LightGray" />
             <Setter Property="VerticalGridLinesBrush" Value="LightGray" />
             <Setter Property="VerticalScrollBarVisibility" Value="Visible" />
