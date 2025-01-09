@@ -13,15 +13,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
-// ReSharper disable RedundantCast
-// ReSharper disable UseNameofExpression
-// ReSharper disable UnusedMember.Global
-// ReSharper disable RedundantAssignment
-// ReSharper disable UnusedType.Global
-// ReSharper disable ExcessiveIndentation
-// ReSharper disable UsePatternMatching
-// ReSharper disable CheckNamespace
-
 namespace FilterDataGrid;
 
 /// <summary>
@@ -133,8 +124,6 @@ public static class ScrollToTopBehavior
 
 public static class Extensions
 {
-    #region Public Methods
-
     public static bool IsSystemType(this Type type) => type.Assembly == typeof(object).Assembly;
 
     public static object GetPropertyValue(this object obj, string propertyName)
@@ -142,17 +131,12 @@ public static class Extensions
         if (obj is null) throw new ArgumentException("Value cannot be null.", nameof(obj));
         if (propertyName is null) throw new ArgumentException("Value cannot be null.", nameof(propertyName));
 
+        if (obj is IDictionary<string, object> dictionary)
+            return dictionary.TryGetValue(propertyName, out var value) ? value : null;
+
         foreach (var prop in propertyName.Split('.').Select(s => obj?.GetType().GetProperty(s)))
             obj = prop?.GetValue(obj, null);
         return obj;
-    }
-
-    public static T GetPropertyValue<T>(this object obj, string propertyName)
-    {
-        foreach (var prop in propertyName.Split('.').Select(s => obj?.GetType().GetProperty(s)))
-            obj = prop?.GetValue(obj, null);
-
-        return (obj is not null) ? (T)obj : default;
     }
 
     public static PropertyInfo GetPropertyInfo(this Type srcType, string propertyName)
@@ -160,46 +144,23 @@ public static class Extensions
         if (srcType is null) throw new ArgumentException("Value cannot be null.", nameof(srcType));
         if (propertyName is null) throw new ArgumentException("Value cannot be null.", nameof(propertyName));
 
-        PropertyInfo infos = null;
-
         if (!propertyName.Contains('.')) return srcType.GetProperty(propertyName);
 
-        foreach (var info in propertyName.Split('.')
-                     .Select(s => srcType?.GetProperty(s, BindingFlags.Public | BindingFlags.Instance)))
+        PropertyInfo propertyInfo = null;
+        foreach (var info in propertyName.Split('.').Select(s => srcType?.GetProperty(s, BindingFlags.Public | BindingFlags.Instance)))
         {
             srcType = info?.PropertyType;
             if (srcType is null) break;
-            infos = info;
+            propertyInfo = info;
         }
-
-        return infos;
+        return propertyInfo;
     }
-
-    #endregion Public Methods
-}
-
-public static class Helpers
-{
-    #region Public Methods
-
-    /// <summary>
-    ///     Print elapsed time
-    /// </summary>
-    /// <param name="label"></param>
-    /// <param name="start"></param>
-    public static void Elapsed(string label, DateTime start)
-    {
-        var span = DateTime.Now - start;
-        Debug.WriteLine($"{label,-20}{span:mm\\:ss\\.ff}");
-    }
-
-    #endregion Public Methods
 }
 
 public static class JsonConvert
 {
     private static DataContractJsonSerializerSettings GetSettings() =>
-        new DataContractJsonSerializerSettings
+        new()
         {
             DateTimeFormat = new DateTimeFormat("yyyy-MM-ddTHH:mm:ss.fffffff")
         };
@@ -208,14 +169,11 @@ public static class JsonConvert
     {
         try
         {
-            if (!File.Exists(filename)) return (T)default;
+            if (!File.Exists(filename)) return default;
 
-
-            using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                var ser = new DataContractJsonSerializer(typeof(T), GetSettings());
-                return (T)ser.ReadObject(fs);
-            }
+            using var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var ser = new DataContractJsonSerializer(typeof(T), GetSettings());
+            return (T)ser.ReadObject(fs);
         }
         catch (Exception ex)
         {
@@ -228,17 +186,13 @@ public static class JsonConvert
     {
         try
         {
-
             using (var fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
-                using (var writer =
-                       JsonReaderWriterFactory.CreateJsonWriter(fs, Encoding.UTF8, true, false, "  "))
-                {
-                    var ser = new DataContractJsonSerializer(typeof(T), GetSettings());
-                    ser.WriteObject(writer, data);
-                    writer.Flush();
-                    return fs.Length;
-                }
+                using var writer = JsonReaderWriterFactory.CreateJsonWriter(fs, Encoding.UTF8, true, false, "  ");
+                var ser = new DataContractJsonSerializer(typeof(T), GetSettings());
+                ser.WriteObject(writer, data);
+                writer.Flush();
+                return fs.Length;
             }
         }
         catch (Exception ex)

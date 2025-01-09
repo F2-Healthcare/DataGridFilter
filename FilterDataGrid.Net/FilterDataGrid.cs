@@ -170,6 +170,12 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
             typeof(FilterDataGrid),
             new PropertyMetadata(Brushes.White));
 
+    public static readonly DependencyProperty CollectionViewSourceProperty =
+        DependencyProperty.Register("CollectionViewSource",
+            typeof(ICollectionView),
+            typeof(FilterDataGrid),
+            new PropertyMetadata());
+
     #endregion Public DependencyProperty
 
     #region Public Event
@@ -385,12 +391,17 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
         set => SetValue(FilterPopupBackgroundProperty, value);
     }
 
+    public ICollectionView CollectionViewSource
+    {
+        get { return (ICollectionView)GetValue(CollectionViewSourceProperty); }
+        set { SetValue(CollectionViewSourceProperty, value); }
+    }
+
     #endregion Public Properties
 
     #region Private Properties
 
     private FilterCommon CurrentFilter { get; set; }
-    private ICollectionView CollectionViewSource { get; set; }
     private ICollectionView ItemCollectionView { get; set; }
     private List<FilterCommon> GlobalFilterList { get; } = [];
     private bool PresetLoaded { get; set; }
@@ -465,8 +476,7 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
         try
         {
             // ignore excluded columns
-            if (excludedColumns.Any(
-                    x => string.Equals(x, e.PropertyName, StringComparison.CurrentCultureIgnoreCase)))
+            if (excludedColumns.Any(x => string.Equals(x, e.PropertyName, StringComparison.CurrentCultureIgnoreCase)))
             {
                 e.Cancel = true;
                 return;
@@ -476,8 +486,7 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
             e.Column.CanUserSort = CanUserSortColumns;
 
             // return if the field is excluded
-            if (excludedFields.Any(c =>
-                    string.Equals(c, e.PropertyName, StringComparison.CurrentCultureIgnoreCase))) return;
+            if (excludedFields.Any(c => string.Equals(c, e.PropertyName, StringComparison.CurrentCultureIgnoreCase))) return;
 
             // template
             var template = (DataTemplate)TryFindResource("DataGridHeaderTemplate");
@@ -492,7 +501,7 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
                     ItemsSource = ((System.Windows.Controls.DataGridComboBoxColumn)e.Column).ItemsSource,
                     SelectedItemBinding = new Binding(e.PropertyName),
                     FieldName = e.PropertyName,
-                    Header = e.Column.Header.ToString(),
+                    Header = e.Column.Header,
                     HeaderTemplate = template,
                     IsSingle = false, // eNum is not a unique value (unique identifier)
                     IsColumnFiltered = true
@@ -500,32 +509,63 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
 
                 e.Column = column;
             }
-            else if (fieldType == typeof(bool))
-            {
-                var column = new DataGridCheckBoxColumn
-                {
-                    Binding = new Binding(e.PropertyName) { ConverterCulture = Translate.Culture },
-                    FieldName = e.PropertyName,
-                    Header = e.Column.Header.ToString(),
-                    HeaderTemplate = template,
-                    IsColumnFiltered = true
-                };
+            //else if (fieldType == typeof(bool))
+            //{
+            //    var column = new DataGridCheckBoxColumn
+            //    {
+            //        Binding = new Binding(e.PropertyName) { ConverterCulture = Translate.Culture },
+            //        FieldName = e.PropertyName,
+            //        Header = e.Column.Header,
+            //        HeaderTemplate = template,
+            //        IsColumnFiltered = true
+            //    };
 
-                e.Column = column;
-            }
+            //    e.Column = column;
+            //}
             else
             {
                 var column = new DataGridTextColumn
                 {
                     Binding = new Binding(e.PropertyName) { ConverterCulture = Translate.Culture },
                     FieldName = e.PropertyName,
-                    Header = e.Column.Header.ToString(),
+                    Header = e.Column.Header,
                     IsColumnFiltered = true
                 };
 
-                // apply the format string provided
-                if (fieldType == typeof(DateTime) && !string.IsNullOrEmpty(DateFormatString))
+                if (e.PropertyType == typeof(DateTime) || e.PropertyType == typeof(DateOnly))
+                {
+                    //var cellStyle = e.Column.CellStyle;
+                    //cellStyle ??= new Style();
+
+                    //var horizontalAlignment = new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right);
+                    //cellStyle.Setters.Add(horizontalAlignment);
+                    //column.CellStyle = cellStyle;
+
+                    // apply the format string provided
                     column.Binding.StringFormat = DateFormatString;
+                }
+
+                if (e.PropertyType == typeof(decimal))
+                {
+                    //var cellStyle = e.Column.CellStyle;
+                    //cellStyle ??= new Style();
+
+                    //var horizontalAlignment = new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right);
+                    //cellStyle.Setters.Add(horizontalAlignment);
+                    //column.CellStyle = cellStyle;
+
+                    column.Binding.StringFormat = "$#,##0.00";
+                }
+
+                if (e.PropertyType == typeof(int) || e.PropertyType == typeof(short))
+                {
+                    //var cellStyle = e.Column.CellStyle;
+                    //cellStyle ??= new Style();
+
+                    //var horizontalAlignment = new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right);
+                    //cellStyle.Setters.Add(horizontalAlignment);
+                    //column.CellStyle = cellStyle;
+                }
 
                 // if the type does not belong to the "System" namespace, disable sorting
                 if (!fieldType.IsSystemType())
@@ -1598,7 +1638,6 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
             DataGridComboBoxColumn comboxColumn = null;
 
             // get field name from binding Path
-            // ReSharper disable once ConvertIfStatementToSwitchStatement
             switch (headerColumn)
             {
                 case DataGridTextColumn textColumn:
@@ -1635,7 +1674,9 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
             if (string.IsNullOrEmpty(fieldName)) return;
 
             // see Extensions helper for GetPropertyInfo
+            var propertyType = Items.Cast<object>().FirstOrDefault().GetPropertyValue(fieldName).GetType();
             var fieldProperty = collectionType.GetPropertyInfo(fieldName);
+            FieldType = fieldProperty?.PropertyType ?? propertyType;
 
             // get type or underlying type if nullable
             if (fieldProperty is not null)
@@ -1662,20 +1703,24 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
 
                 // get the list of raw values of the current column
                 if (fieldType == typeof(DateTime))
+                {
                     // possible distinct values because time part is removed
                     sourceObjectList = Items.Cast<object>()
                         .Select(x => (object)((DateTime?)x.GetPropertyValue(fieldName))?.Date)
                         .Distinct()
                         .ToList();
+                }
                 else
+                {
                     sourceObjectList = Items.Cast<object>()
                         .Select(x => x.GetPropertyValue(fieldName))
                         .Distinct()
                         .ToList();
+                }
 
                 // adds the previous filtered items to the list of new items (CurrentFilter.PreviouslyFilteredItems)
                 if (lastFilter == CurrentFilter.FieldName)
-                    sourceObjectList.AddRange(CurrentFilter?.PreviouslyFilteredItems ?? new HashSet<object>());
+                    sourceObjectList.AddRange(CurrentFilter?.PreviouslyFilteredItems ?? []);
 
                 // empty item flag
                 // if they exist, remove all null or empty string values from the list.
@@ -1694,7 +1739,7 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
                     filterItemList = new List<FilterItem>(sourceObjectList.Count + 2)
                     {
                         // ReSharper disable once ArrangeObjectCreationWhenTypeEvident (compatibility with Net4.8)
-                        new FilterItem { Label = Translate.All, IsChecked = true, Level = 0 }
+                        new() { Label = Translate.All, IsChecked = true, Level = 0 }
                     };
 
                 // add all items (not null) to the filterItemList,

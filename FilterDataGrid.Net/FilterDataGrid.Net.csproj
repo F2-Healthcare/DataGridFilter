@@ -19,6 +19,7 @@
 
     <SignAssembly>False</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\NuGet\FilterDataGrid.snk</AssemblyOriginatorKeyFile>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
 </Project>

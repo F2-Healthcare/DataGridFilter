@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable MemberCanBePrivate.Global
-// ReSharper disable UnusedMember.Local
-// ReSharper disable UnusedMember.Global
-
 namespace FilterDataGrid;
 
 public enum Local
