@@ -1674,7 +1674,7 @@ public class FilterDataGrid : DataGrid, INotifyPropertyChanged
             if (string.IsNullOrEmpty(fieldName)) return;
 
             // see Extensions helper for GetPropertyInfo
-            var propertyType = Items.Cast<object>().FirstOrDefault().GetPropertyValue(fieldName).GetType();
+            var propertyType = Items.Cast<object>().FirstOrDefault()?.GetPropertyValue(fieldName)?.GetType();
             var fieldProperty = collectionType.GetPropertyInfo(fieldName);
             FieldType = fieldProperty?.PropertyType ?? propertyType;
 
