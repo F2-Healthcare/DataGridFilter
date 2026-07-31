@@ -2,12 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -128,78 +124,12 @@ public static class Extensions
 
     public static object GetPropertyValue(this object obj, string propertyName)
     {
-        if (obj is null) throw new ArgumentException("Value cannot be null.", nameof(obj));
-        if (propertyName is null) throw new ArgumentException("Value cannot be null.", nameof(propertyName));
-
-        if (obj is IDictionary<string, object> dictionary)
-            return dictionary.TryGetValue(propertyName, out var value) ? value : null;
-
-        foreach (var prop in propertyName.Split('.').Select(s => obj?.GetType().GetProperty(s)))
-            obj = prop?.GetValue(obj, null);
-        return obj;
+        return PropertyPathAccessor.GetValue(obj, propertyName);
     }
 
     public static PropertyInfo GetPropertyInfo(this Type srcType, string propertyName)
     {
-        if (srcType is null) throw new ArgumentException("Value cannot be null.", nameof(srcType));
-        if (propertyName is null) throw new ArgumentException("Value cannot be null.", nameof(propertyName));
-
-        if (!propertyName.Contains('.')) return srcType.GetProperty(propertyName);
-
-        PropertyInfo propertyInfo = null;
-        foreach (var info in propertyName.Split('.').Select(s => srcType?.GetProperty(s, BindingFlags.Public | BindingFlags.Instance)))
-        {
-            srcType = info?.PropertyType;
-            if (srcType is null) break;
-            propertyInfo = info;
-        }
-        return propertyInfo;
-    }
-}
-
-public static class JsonConvert
-{
-    private static DataContractJsonSerializerSettings GetSettings() =>
-        new()
-        {
-            DateTimeFormat = new DateTimeFormat("yyyy-MM-ddTHH:mm:ss.fffffff")
-        };
-
-    public static T Deserialize<T>(string filename)
-    {
-        try
-        {
-            if (!File.Exists(filename)) return default;
-
-            using var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var ser = new DataContractJsonSerializer(typeof(T), GetSettings());
-            return (T)ser.ReadObject(fs);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"JsonConvert.Deserialize error : {ex.Message}");
-            throw;
-        }
-    }
-
-    public static long Serialize<T>(string filename, T data)
-    {
-        try
-        {
-            using (var fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read))
-            {
-                using var writer = JsonReaderWriterFactory.CreateJsonWriter(fs, Encoding.UTF8, true, false, "  ");
-                var ser = new DataContractJsonSerializer(typeof(T), GetSettings());
-                ser.WriteObject(writer, data);
-                writer.Flush();
-                return fs.Length;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"JsonConvert.Serialize error : {ex.Message}");
-            throw;
-        }
+        return PropertyPathAccessor.GetPropertyInfo(srcType, propertyName);
     }
 }
 

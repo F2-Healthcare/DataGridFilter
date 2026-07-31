@@ -86,17 +86,13 @@
         <UniformGrid
             Grid.Row="1"
             Margin="10,0,0,0"
-            Columns="2">
+            Columns="1">
             <Label
                 HorizontalAlignment="Left"
                 Content="{Binding ElementName=FilterDataGrid, Path=Items.Count, UpdateSourceTrigger=PropertyChanged}"
                 ContentStringFormat="Custom colums : {0:### ### ###} items"
                 FontSize="13"
                 FontWeight="DemiBold" />
-            <Label
-                HorizontalAlignment="Right"
-                Content="{Binding ElementName=FilterDataGrid, Path=Translate.DisplayName}"
-                ContentStringFormat="Filter Language : {0}" />
         </UniformGrid>
 
         <!--
@@ -108,12 +104,7 @@
             Grid.Row="2"
             AutoGenerateColumns="False"
             DateFormatString="d"
-            FilterLanguage="English"
             ItemsSource="{Binding FilteredList, UpdateSourceTrigger=PropertyChanged}"
-            PersistentFilter="False"
-            ShowElapsedTime="True"
-            ShowRowsCount="True"
-            ShowStatusBar="True"
             Style="{StaticResource FilterDatagridStyle}">
             <control:FilterDataGrid.Columns>
 
@@ -184,10 +175,18 @@
                     SelectedValueBinding="{Binding Country.Id}"
                     SelectedValuePath="Id" />
 
-                <control:DataGridTextColumn
-                    Binding="{Binding StartDate}"
+                <control:DataGridTemplateColumn
+                    FieldName="StartDate"
+                    FieldType="{x:Type core:DateTime}"
                     Header="Start Date"
-                    IsColumnFiltered="True" />
+                    IsColumnFiltered="True"
+                    SortMemberPath="StartDate">
+                    <control:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="sharedModelView:Employe">
+                            <TextBlock Padding="2,0" Text="{Binding StartDate, StringFormat=d}" />
+                        </DataTemplate>
+                    </control:DataGridTemplateColumn.CellTemplate>
+                </control:DataGridTemplateColumn>
             </control:FilterDataGrid.Columns>
         </control:FilterDataGrid>
 
@@ -198,17 +197,13 @@
         <UniformGrid
             Grid.Row="3"
             Margin="10,10,0,2"
-            Columns="2">
+            Columns="1">
             <Label
                 HorizontalAlignment="Left"
                 Content="{Binding ElementName=FilterDataGridAuto, Path=Items.Count}"
                 ContentStringFormat="Auto generate columns : {0:### ### ###} items"
                 FontSize="13"
                 FontWeight="DemiBold" />
-            <Label
-                HorizontalAlignment="Right"
-                Content="{Binding ElementName=FilterDataGridAuto, Path=Translate.DisplayName}"
-                ContentStringFormat="Filter Language : {0}" />
         </UniformGrid>
         <control:FilterDataGrid
             x:Name="FilterDataGridAuto"
@@ -217,7 +212,6 @@
             CanUserSortColumns="True"
             ExcludeColumns="country, idcountry"
             ExcludeFields="lastname, age"
-            FilterLanguage="French"
             ItemsSource="{Binding Employes, UpdateSourceTrigger=PropertyChanged}"
             Style="{StaticResource FilterDatagridStyle}" />
 

@@ -6,8 +6,6 @@ namespace FilterDataGrid;
 
 public abstract class FilterBase : NotifyProperty
 {
-    #region Public Properties
-
     /// <summary>
     ///     Raw value of the item (not displayed, see Label property)
     /// </summary>
@@ -21,7 +19,6 @@ public abstract class FilterBase : NotifyProperty
     /// <summary>
     ///     Field type
     /// </summary>
-
     public Type FieldType { get; set; }
 
     /// <summary>
@@ -38,8 +35,6 @@ public abstract class FilterBase : NotifyProperty
     ///     Hierarchical level
     /// </summary>
     public int Level { get; set; }
-
-    #endregion Public Properties
 }
 
 public class FilterItem : FilterBase
@@ -117,7 +112,9 @@ public class FilterItemDate : FilterBase
     }
 
     public FilterItem Item { get; set; }
+
     public FilterItemDate Parent { get; set; }
+
     public List<FilterItemDate> Tree { get; set; }
 
     #endregion Public Properties

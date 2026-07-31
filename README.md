@@ -83,13 +83,16 @@ To understand how the filter works, you can consult the article posted on [CodeP
     ```
 
 - **Custom TemplateColumn**  
-     > :warning: ***FieldName** property of **DataGridTemplateColumn** is required*
+     > :warning: ***FieldName** property of **DataGridTemplateColumn** is required. Use **FieldType** when the template's filter type cannot be inferred or needs to be explicit.*
 
   ```xml
-  <control:FilterDataGrid.Columns>   
+  <control:FilterDataGrid.Columns>
       <control:DataGridTemplateColumn IsColumnFiltered="True"
-                                      FieldName="LastName" ... />  
+                                      FieldName="StartDate"
+                                      FieldType="{x:Type sys:DateTime}" ... />
   ```
+
+  (`sys` maps to the `System` CLR namespace.) `DateTime` and `DateOnly` field types use the Excel-like year/month/day filter even when the cell content is fully templated.
   
 - **Custom ComboBoxColumn**  :new:
     > :warning: ***SelectedItemBinding** or ***SelectedValueBinding*** property is required.    
